@@ -220,17 +220,18 @@
 (defun helm-backup ()
   "Main function used to call `helm-backup`."
   (interactive)
-  (when-let* ((candidate (completing-read "Backup: " (--map (string-join `(,(cdr it) " : " ,(car it))) (helm-backup--list-file-change-time (buffer-file-name))) nil t))
-              (commit (substring candidate 0 9))
-              (action (completing-read (format "Action on %s : " candidate)
-                                       '("ediff file with backup" "open in new buffer" "replace current buffer") nil t)))
-    (cond
-     ((string-prefix-p "open" action)
-      (helm-backup--open-in-new-buffer commit (buffer-file-name)))
-     ((string-prefix-p "replace" action)
-      (helm-backup--replace-current-buffer commit (buffer-file-name)))
-     (t
-      (helm-backup--create-ediff commit (current-buffer))))))
+  (let ((ivy-sort-functions-alist nil)) ;; if ivy is used for completing read, make sure no sorting takes place
+    (when-let* ((candidate (completing-read "Backup: " (--map (string-join `(,(cdr it) " : " ,(car it))) (helm-backup--list-file-change-time (buffer-file-name))) nil t))
+                (commit (substring candidate 0 9))
+                (action (completing-read (format "Action on %s : " candidate)
+                                         '("ediff file with backup" "open in new buffer" "replace current buffer") nil t)))
+      (cond
+       ((string-prefix-p "open" action)
+        (helm-backup--open-in-new-buffer commit (buffer-file-name)))
+       ((string-prefix-p "replace" action)
+        (helm-backup--replace-current-buffer commit (buffer-file-name)))
+       (t
+        (helm-backup--create-ediff commit (current-buffer)))))))
 
 (eval-after-load "helm-backup"
   '(progn

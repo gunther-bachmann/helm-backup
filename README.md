@@ -1,6 +1,6 @@
 # Helm-backup [![Build Status](https://travis-ci.org/antham/helm-backup.png?branch=master)](https://travis-ci.org/antham/helm-backup) [![MELPA](http://melpa.org/packages/helm-backup-badge.svg)](http://melpa.org/#/helm-backup)
 
-This project aims to create a backup system for emacs using both power of git to store changes and power of helm to fetch backups easily.
+This project aims to create a backup system for emacs using both power of git to store changes and power of completing-read to fetch backups easily.
 
 ![](http://antham.github.io/helm-backup/pictures/helm-backup.gif)
 
@@ -16,8 +16,8 @@ This project aims to create a backup system for emacs using both power of git to
 ### Dependencies
 
 * git (>= 1.5) (binary)
-* helm (emacs library)
 * s (emacs library)
+* (optionally) helm, ivy or any other library that uses completing-read
 
 For emacs prior version 24.3 :
 
