@@ -35,8 +35,6 @@
 
 ;;; Code:
 
-(require 'helm)
-(require 'helm-utils)
 (require 'cl-lib)
 (require 's)
 
@@ -160,6 +158,7 @@
           (insert data)
           (funcall mode)
           (set-buffer-modified-p nil)
+          (read-only-mode 1)
           buffer)))))
 
 (defun helm-backup--remove-file-history (filename)
@@ -206,21 +205,6 @@
   (helm-backup--remove-file-history filename)
   (helm-backup--remove-file filename))
 
-(defun helm-backup--source ()
-  "Source used to populate buffer."
-  `((name . ,(format "Backup for %s" (buffer-file-name)))
-    (candidates . ,(helm-backup--list-file-change-time (buffer-file-name)))
-    (action ("Ediff file with backup" .
-             ,(lambda (candidate)
-                (helm-backup--create-ediff candidate (current-buffer))))
-            ("Open in new buffer" .
-             ,(lambda (candidate)
-                (helm-backup--open-in-new-buffer candidate (buffer-file-name))))
-            ("Replace current buffer" .
-             ,(lambda (candidate)
-                (with-helm-current-buffer
-                  (helm-backup--replace-current-buffer candidate (buffer-file-name))))))))
-
 ;;;###autoload
 (defun helm-backup-versioning ()
   "Helper to add easily versioning."
@@ -236,11 +220,17 @@
 (defun helm-backup ()
   "Main function used to call `helm-backup`."
   (interactive)
-  (let ((helm-quit-if-no-candidate
-         (lambda ()
-           (error
-            "No filename associated with buffer, file has no backup yet or filename is blacklisted"))))
-    (helm-other-buffer (helm-backup--source) "*Helm Backup*")))
+  (when-let* ((candidate (completing-read "Backup: " (--map (string-join `(,(cdr it) " : " ,(car it))) (helm-backup--list-file-change-time (buffer-file-name))) nil t))
+              (commit (substring candidate 0 9))
+              (action (completing-read (format "Action on %s : " candidate)
+                                       '("ediff file with backup" "open in new buffer" "replace current buffer") nil t)))
+    (cond
+     ((string-prefix-p "open" action)
+      (helm-backup--open-in-new-buffer commit (buffer-file-name)))
+     ((string-prefix-p "replace" action)
+      (helm-backup--replace-current-buffer commit (buffer-file-name)))
+     (t
+      (helm-backup--create-ediff commit (current-buffer))))))
 
 (eval-after-load "helm-backup"
   '(progn
